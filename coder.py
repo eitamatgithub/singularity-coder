@@ -40,7 +40,7 @@ Notes about Cursor CLI integration:
 
 from __future__ import annotations
 
-ALLOW_BLIND_EXECUTION = True
+ALLOW_BLIND_EXECUTION = False
 
 import dataclasses
 import json
@@ -55,6 +55,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
+
+
+CURSOR_TIMEOUT = int(os.environ.get("CURSOR_TIMEOUT_S", "3600"))
 
 # ---------------------------
 # Optional LangGraph import
@@ -118,7 +121,7 @@ def _cursor_cmd() -> List[str]:
     return base
 
 
-def call_cursor_cli(prompt: str, timeout_s: int = 300) -> str:
+def call_cursor_cli(prompt: str, timeout_s: int = CURSOR_TIMEOUT) -> str:
     """
     Calls Cursor CLI by sending `prompt` on stdin and returns stdout.
     You may need to configure CURSOR_CLI_CMD / CURSOR_CLI_ARGS for your environment.
@@ -603,7 +606,6 @@ def run_poc(
     workspace_dir: str = "./poc_workspace",
     max_iters: int = 8,
     model_notes: str = "",
-    timeout_cursor_s: int = 300,
     mode: RunMode = RunMode.SAFE_INTERACTIVE
 ) -> str:
     """
@@ -611,27 +613,13 @@ def run_poc(
 
     Returns: output_ipy_path
     """
-    # Allow overriding cursor timeout via env, but keep signature stable
-    if os.environ.get("CURSOR_TIMEOUT_S"):
-        try:
-            timeout_cursor_s = int(os.environ["CURSOR_TIMEOUT_S"])
-        except Exception:
-            pass
+
 
     if not _LANGGRAPH_AVAILABLE:
         raise RuntimeError(
             "langgraph is not installed. In Colab run: pip install langgraph\n"
             "If you want a non-LangGraph fallback, you can adapt this file easily."
         )
-
-    # Patch call_cursor_cli timeout without changing signature everywhere:
-    global call_cursor_cli  # noqa: PLW0603
-    _orig_call = call_cursor_cli
-
-    def _call_with_timeout(prompt: str, timeout_s: int = timeout_cursor_s) -> str:
-        return _orig_call(prompt, timeout_s=timeout_s)
-
-    call_cursor_cli = _call_with_timeout  # type: ignore
 
     ws = Path(workspace_dir)
     ws.mkdir(parents=True, exist_ok=True)
@@ -751,7 +739,7 @@ def run_coder(user_prompt, mode="safe-interactive"):
         user_prompt=user_prompt,
         kpis=kpis,
         output_ipy_path="./final_notebook.py",
-        max_iters=3,
+        max_iters=10,
         mode=mode,
     )
     print("Exported:", out)
