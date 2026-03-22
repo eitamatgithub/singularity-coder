@@ -1,11 +1,34 @@
 # SingULAR: Single-Prompt Utility-Driven Autonomous Runtime
 
+
+SingULAR will help you generate Colab code that works out of the box using a Cursor API key - when alternative Gemini/Cursor/Claude-Code–based solutions crash, break, or fail to achieve the intended result
+
+In order to use SingULAR:
+
+### 1. Read the [TL;DR](#tldr) below
+
+### 2. Look at this sample notebook
+https://colab.research.google.com/github/eitamatgithub/singular/blob/main/singular_cursor2_5_update_reasoning_poc_example.ipynb
+
+### 3. On the left bar go to secrets and fill your CURSOR_API_KEY
+You can generate one using these instructions:
+
+   1. Log in to your **Cursor Dashboard**.
+   2. Navigate to the **Settings** tab (or **Integrations**, depending on your plan).
+   3. Locate the **User API Keys** or **Admin API Keys** section under **Advanced**.
+   4. Click **Create New API Key**, give it a name, and copy it immediately— it will not be shown again.
+
+### 4. Modify the prompt to fit your needs
+
+
+## About
 **SingULAR** (**SING**le-prompt **U**tility-driven **L**LM-based **A**utonomous **R**untime) is an audacious autonomous code generator designed primarily for building POCs, research prototypes, experimental workflows, scientific simulations and other excuses for using Google Colab notebooks :). It is built on top of Cursor and uses real Colab runtime execution feedback in a LangGraph agent loop to iteratively refine generated code until satisfactory results (or a hard stop) are reached - Combining the power of Cursor and Google Colab together. The main challenge this library aims to address is optimizing the iterative execution–feedback loop, with a primary focus on defining what constitutes satisfactory results and dynamically modeling a clear, testable Definition of Done (DoD) for each task.
 
 
 ---
 
 ## TL;DR — READ THIS BEFORE USING THE CODE
+<a id="tldr"></a> 
 
 **You must read and understand this entire section before using SingULAR.**
 
@@ -15,9 +38,18 @@ SingULAR can operate in **two execution modes**:
 Every code execution requires explicit user approval.  
 This is the recommended mode.
 
+Now with Cursor>=2.5 you must allow cursor backend to run unattended code, but Singular will not run unattended code by itself so the argument for the interface should be:
+
+```python
+run_coder(prompt, mode="singular:safe-interactive;cursor:blind-autonomous")
+```
+
 #### 2. `blind-autonomous`
 Execution–feedback iterations run fully unattended until convergence or a predefined stop condition. This mode is **disabled by default** and requires explicitly modifying the code to enable it, as it carries inherent security risks. 
 If your project requires a large number of iterations and/or you intend to scale execution, you may consider using this mode - but read [BLIND_AUTONOMOUS_SAFETY_AND_LIABILITY.md](BLIND_AUTONOMOUS_SAFETY_AND_LIABILITY.md) first
+
+
+
 
 
 
@@ -34,13 +66,7 @@ If you plan to use **blind-autonomous** mode, you must read [BLIND_AUTONOMOUS_SA
 Also make sure you understand the **Project Status** and **Privacy & Data Handling** sections before using the code.
 
 
-## How to Use:
-Use this notebook https://colab.research.google.com/drive/1b0-VVeX25O4AZxZsssvEMNuFcuAfEefx?usp=sharing  it is shipped with an example prompt and solution. On the left bar go to secrets and fill your CURSOR_API_KEY, you can generate one using these instructions:
 
-1. Log in to your **Cursor Dashboard**.
-2. Navigate to the **Settings** tab (or **Integrations**, depending on your plan).
-3. Locate the **User API Keys** or **Admin API Keys** section under **Advanced**.
-4. Click **Create New API Key**, give it a name, and copy it immediately— it will not be shown again.
 
 
 ---
