@@ -143,7 +143,8 @@ def call_cursor_cli(prompt: str, timeout_s: int = CURSOR_TIMEOUT) -> str:
     cmd = [
         "cursor-agent",
         "--api-key", CURSOR_API_KEY,
-        "-p", prompt
+        "-p", prompt,
+        "-f", ""
     ]
 
 
@@ -229,11 +230,11 @@ def build_cursor_prompt(
     5) Keep the API stable: tests should import from solution.py.
     6) Prefer small, reliable code, however it should fail on erros and not include try/catch and fallbacks, every error (from unresolved errors to runtime erros) should fail the tests. Include docstrings and type hints.
     7) there should be one function running the entire task asked in the user request (not the tests), that will not have any arguments, named main_notebook_call(), it will be tested as well by the tests to check that it doesn't crash.
-    
-    
+
+
     Note that the previous code generated might have errors, you need to fix them based on the feedback below.
     {feedback_block}
-        
+
     ## Output format (STRICT)
     Output exactly two fenced code blocks, in this order:
 
@@ -795,6 +796,9 @@ def convergence_playbook() -> Dict[str, List[str]]:
 
 
 def run_coder(user_prompt, mode="safe-interactive"):
+    assert mode=="singular:safe-interactive;cursor:blind-autonomous"
+    mode=mode.split(";")[0].split(":")[1]
+    assert mode in ["safe-interactive", "blind-autonomous"]
     '''
     example user_prompt = "Create a tiny POC with an add() function."
     '''
@@ -805,15 +809,16 @@ def run_coder(user_prompt, mode="safe-interactive"):
     if not ALLOW_BLIND_EXECUTION and mode == RunMode.BLIND_AUTONOMOUS:
         raise ValueError("Blind execution is not allowed. Please explictly change code to ALLOW_BLIND_EXECUTION=True if you read the README.md file and understand the risks or use safe-interactive mode.")
 
+
     kpi_prompt = textwrap.dedent(f"""
     You are an expert software engineer.
 
     Given the following user prompt - to create a colab script, generate a list of kpis (as free text) that can be used to verify the solution meets the user's requirements.
-    It is important that every solution will not include try/catch and fallbacks and that every error (from unresolved errors to runtime erros) should fail the tests - 
+    It is important that every solution will not include try/catch and fallbacks and that every error (from unresolved errors to runtime erros) should fail the tests -
     make sure the KPIs include this requirements and that it is is tested as well (tests that assess the code itself))
     """).strip()
     kpis = call_cursor_cli(kpi_prompt)
-        
+
     out = run_poc(
         user_prompt=user_prompt,
         kpis=kpis,
@@ -822,7 +827,7 @@ def run_coder(user_prompt, mode="safe-interactive"):
         mode=mode,
     )
     print("Exported:", out)
-  
+
     #print the code that will be run:
     print(
         Path(out).read_text(encoding="utf-8")
